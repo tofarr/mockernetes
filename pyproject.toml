@@ -1,0 +1,17 @@
+[project]
+name = "mockernetes"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "kubernetes>=34.1.0",
+    "pytest>=9.0.2",
+]
+
+[project.scripts]
+mockernetes = "mockernetes:main"
+
+[build-system]
+requires = ["uv_build>=0.9.10,<0.10.0"]
+build-backend = "uv_build"
