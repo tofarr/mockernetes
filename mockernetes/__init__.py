@@ -3,14 +3,14 @@
 __version__ = "0.1.0"
 
 from .mock import MockKubernetes, mock_kubernetes, patch_kubernetes
-from .mock_client import MockApiClient, MockKubernetesState
 from .mock_apis import (
-    MockCoreV1Api,
     MockAppsV1Api,
+    MockCoreV1Api,
+    MockCustomObjectsApi,
     MockNetworkingV1Api,
     MockPolicyV1Api,
-    MockCustomObjectsApi,
 )
+from .mock_client import MockApiClient, MockKubernetesState
 
 __all__ = [
     "MockKubernetes",
@@ -27,4 +27,5 @@ __all__ = [
 
 
 def main() -> None:
+    """Entry point for the mockernetes CLI."""
     print("Hello from mockernetes!")

@@ -9,7 +9,7 @@ import pytest
 from kubernetes import client as k8s_client
 from kubernetes.client.rest import ApiException
 
-from mockernetes import mock_kubernetes, MockKubernetes
+from mockernetes import MockKubernetes, mock_kubernetes
 
 
 def test_import():

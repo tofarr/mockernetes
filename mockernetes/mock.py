@@ -5,20 +5,21 @@ This module provides the primary interface for using Mockernetes as a drop-in
 replacement for the Kubernetes client in tests.
 """
 
+import inspect
 from contextlib import contextmanager
-from typing import Optional, Dict, Any, Generator
+from typing import Any, Dict, Generator, Optional
 from unittest.mock import patch
 
 from kubernetes import client as k8s_client
 
-from .mock_client import MockApiClient, MockKubernetesState
 from .mock_apis import (
-    MockCoreV1Api,
     MockAppsV1Api,
+    MockCoreV1Api,
+    MockCustomObjectsApi,
     MockNetworkingV1Api,
     MockPolicyV1Api,
-    MockCustomObjectsApi,
 )
+from .mock_client import MockApiClient, MockKubernetesState
 
 
 class MockKubernetes:
@@ -257,13 +258,10 @@ def patch_kubernetes(initial_state: Optional[Dict[str, Any]] = None):
         def wrapper(*args, **kwargs):
             with mock_kubernetes(initial_state) as mock_k8s:
                 # Add mock_k8s as first argument if function accepts it
-                import inspect
-
                 sig = inspect.signature(func)
                 if len(sig.parameters) > len(args):
                     return func(mock_k8s, *args, **kwargs)
-                else:
-                    return func(*args, **kwargs)
+                return func(*args, **kwargs)
 
         return wrapper
 

@@ -5,7 +5,8 @@ These classes provide the same interface as the real Kubernetes API classes
 but operate on the mock state instead of a real cluster.
 """
 
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, Optional
+
 from kubernetes import client as k8s_client
 from kubernetes.client.rest import ApiException
 
@@ -23,19 +24,19 @@ class MockCoreV1Api:
 
     # Namespace operations
     def create_namespace(
-        self, body: k8s_client.V1Namespace, **kwargs
+        self, body: k8s_client.V1Namespace, **_kwargs
     ) -> k8s_client.V1Namespace:
         """Create a namespace."""
         return self.state.create_resource(None, "Namespace", body)
 
-    def delete_namespace(self, name: str, **kwargs) -> k8s_client.V1Status:
+    def delete_namespace(self, name: str, **_kwargs) -> k8s_client.V1Status:
         """Delete a namespace."""
         self.state.delete_resource(None, "Namespace", name)
         return k8s_client.V1Status(status="Success")
 
     # Pod operations
     def create_namespaced_pod(
-        self, namespace: str, body: k8s_client.V1Pod, **kwargs
+        self, namespace: str, body: k8s_client.V1Pod, **_kwargs
     ) -> k8s_client.V1Pod:
         """Create a pod in a namespace."""
         # Initialize pod status if not present
@@ -52,20 +53,20 @@ class MockCoreV1Api:
         return pod
 
     def read_namespaced_pod(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Pod:
         """Read a specific pod."""
         return self.state.get_resource(namespace, "Pod", name)
 
     def list_namespaced_pod(
-        self, namespace: str, label_selector: Optional[str] = None, **kwargs
+        self, namespace: str, label_selector: Optional[str] = None, **_kwargs
     ) -> k8s_client.V1PodList:
         """List pods in a namespace."""
         pods = self.state.list_resources(namespace, "Pod", label_selector)
         return k8s_client.V1PodList(items=pods)
 
     def delete_namespaced_pod(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Status:
         """Delete a pod."""
         self.state.delete_resource(namespace, "Pod", name)
@@ -77,7 +78,7 @@ class MockCoreV1Api:
         namespace: str,
         container: Optional[str] = None,
         previous: bool = False,
-        **kwargs,
+        **_kwargs,
     ) -> str:
         """Read pod logs."""
         pod = self.state.get_resource(namespace, "Pod", name)
@@ -95,14 +96,13 @@ class MockCoreV1Api:
 
         if pod.status.phase == "Running":
             return f"Mock logs for pod {name} in container {container or 'default'}"
-        elif pod.status.phase == "Failed":
+        if pod.status.phase == "Failed":
             return f"Error logs for failed pod {name}"
-        else:
-            return f"No logs available for pod {name} in phase {pod.status.phase}"
+        return f"No logs available for pod {name} in phase {pod.status.phase}"
 
     # Service operations
     def create_namespaced_service(
-        self, namespace: str, body: k8s_client.V1Service, **kwargs
+        self, namespace: str, body: k8s_client.V1Service, **_kwargs
     ) -> k8s_client.V1Service:
         """Create a service."""
         # Set default service type if not specified
@@ -111,25 +111,28 @@ class MockCoreV1Api:
 
         # Generate cluster IP if not set
         if not body.spec.cluster_ip and body.spec.type == "ClusterIP":
-            body.spec.cluster_ip = f"10.96.{len(self.state.get_resource_store(namespace, 'Service')) % 255}.{(len(self.state.get_resource_store(namespace, 'Service')) // 255) % 255}"
+            service_count = len(self.state.get_resource_store(namespace, "Service"))
+            body.spec.cluster_ip = (
+                f"10.96.{service_count % 255}.{(service_count // 255) % 255}"
+            )
 
         return self.state.create_resource(namespace, "Service", body)
 
     def read_namespaced_service(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Service:
         """Read a specific service."""
         return self.state.get_resource(namespace, "Service", name)
 
     def list_namespaced_service(
-        self, namespace: str, label_selector: Optional[str] = None, **kwargs
+        self, namespace: str, label_selector: Optional[str] = None, **_kwargs
     ) -> k8s_client.V1ServiceList:
         """List services in a namespace."""
         services = self.state.list_resources(namespace, "Service", label_selector)
         return k8s_client.V1ServiceList(items=services)
 
     def delete_namespaced_service(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Status:
         """Delete a service."""
         self.state.delete_resource(namespace, "Service", name)
@@ -137,19 +140,19 @@ class MockCoreV1Api:
 
     # ServiceAccount operations
     def create_namespaced_service_account(
-        self, namespace: str, body: k8s_client.V1ServiceAccount, **kwargs
+        self, namespace: str, body: k8s_client.V1ServiceAccount, **_kwargs
     ) -> k8s_client.V1ServiceAccount:
         """Create a service account."""
         return self.state.create_resource(namespace, "ServiceAccount", body)
 
     def read_namespaced_service_account(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1ServiceAccount:
         """Read a specific service account."""
         return self.state.get_resource(namespace, "ServiceAccount", name)
 
     def delete_namespaced_service_account(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Status:
         """Delete a service account."""
         self.state.delete_resource(namespace, "ServiceAccount", name)
@@ -157,7 +160,7 @@ class MockCoreV1Api:
 
     # PersistentVolumeClaim operations
     def create_namespaced_persistent_volume_claim(
-        self, namespace: str, body: k8s_client.V1PersistentVolumeClaim, **kwargs
+        self, namespace: str, body: k8s_client.V1PersistentVolumeClaim, **_kwargs
     ) -> k8s_client.V1PersistentVolumeClaim:
         """Create a PVC."""
         # Initialize status
@@ -172,13 +175,13 @@ class MockCoreV1Api:
         return pvc
 
     def read_namespaced_persistent_volume_claim(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1PersistentVolumeClaim:
         """Read a specific PVC."""
         return self.state.get_resource(namespace, "PersistentVolumeClaim", name)
 
     def delete_namespaced_persistent_volume_claim(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Status:
         """Delete a PVC."""
         self.state.delete_resource(namespace, "PersistentVolumeClaim", name)
@@ -223,7 +226,7 @@ class MockAppsV1Api:
         )
 
     def create_namespaced_deployment(
-        self, namespace: str, body: k8s_client.V1Deployment, **kwargs
+        self, namespace: str, body: k8s_client.V1Deployment, **_kwargs
     ) -> k8s_client.V1Deployment:
         """Create a deployment."""
         # Initialize status
@@ -240,20 +243,20 @@ class MockAppsV1Api:
         return deployment
 
     def read_namespaced_deployment(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Deployment:
         """Read a specific deployment."""
         return self.state.get_resource(namespace, "Deployment", name)
 
     def list_namespaced_deployment(
-        self, namespace: str, label_selector: Optional[str] = None, **kwargs
+        self, namespace: str, label_selector: Optional[str] = None, **_kwargs
     ) -> k8s_client.V1DeploymentList:
         """List deployments in a namespace."""
         deployments = self.state.list_resources(namespace, "Deployment", label_selector)
         return k8s_client.V1DeploymentList(items=deployments)
 
     def delete_namespaced_deployment(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Status:
         """Delete a deployment."""
         self.state.delete_resource(namespace, "Deployment", name)
@@ -326,19 +329,19 @@ class MockNetworkingV1Api:
         )
 
     def create_namespaced_ingress(
-        self, namespace: str, body: k8s_client.V1Ingress, **kwargs
+        self, namespace: str, body: k8s_client.V1Ingress, **_kwargs
     ) -> k8s_client.V1Ingress:
         """Create an ingress."""
         return self.state.create_resource(namespace, "Ingress", body)
 
     def read_namespaced_ingress(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Ingress:
         """Read a specific ingress."""
         return self.state.get_resource(namespace, "Ingress", name)
 
     def delete_namespaced_ingress(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Status:
         """Delete an ingress."""
         self.state.delete_resource(namespace, "Ingress", name)
@@ -355,19 +358,19 @@ class MockPolicyV1Api:
         )
 
     def create_namespaced_pod_disruption_budget(
-        self, namespace: str, body: k8s_client.V1PodDisruptionBudget, **kwargs
+        self, namespace: str, body: k8s_client.V1PodDisruptionBudget, **_kwargs
     ) -> k8s_client.V1PodDisruptionBudget:
         """Create a PodDisruptionBudget."""
         return self.state.create_resource(namespace, "PodDisruptionBudget", body)
 
     def read_namespaced_pod_disruption_budget(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1PodDisruptionBudget:
         """Read a specific PodDisruptionBudget."""
         return self.state.get_resource(namespace, "PodDisruptionBudget", name)
 
     def delete_namespaced_pod_disruption_budget(
-        self, name: str, namespace: str, **kwargs
+        self, name: str, namespace: str, **_kwargs
     ) -> k8s_client.V1Status:
         """Delete a PodDisruptionBudget."""
         self.state.delete_resource(namespace, "PodDisruptionBudget", name)
@@ -383,35 +386,53 @@ class MockCustomObjectsApi:
             api_client.state if hasattr(api_client, "state") else MockKubernetesState()
         )
 
-    def create_namespaced_custom_object(
+    def create_namespaced_custom_object(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         group: str,
         version: str,
         namespace: str,
         plural: str,
         body: Dict[str, Any],
-        **kwargs,
+        **_kwargs,
     ) -> Dict[str, Any]:
         """Create a custom resource."""
         kind = plural.capitalize().rstrip("s")  # Simple pluralization reversal
 
         # Convert dict to a simple object for storage
         class CustomResource:
+            """Simple wrapper for custom resource data."""
+
             def __init__(self, data):
                 self.__dict__.update(data)
                 if "metadata" in data:
                     self.metadata = k8s_client.V1ObjectMeta(**data["metadata"])
 
+            def to_dict(self):
+                """Convert back to dictionary format."""
+                return self.__dict__
+
+            def get_name(self):
+                """Get the resource name from metadata."""
+                return (
+                    self.metadata.name
+                    if hasattr(self, "metadata") and self.metadata
+                    else None
+                )
+
         resource = CustomResource(body)
-        created = self.state.create_resource(
-            namespace, f"{group}/{version}/{kind}", resource
-        )
+        self.state.create_resource(namespace, f"{group}/{version}/{kind}", resource)
 
         # Return as dict
         return body
 
-    def get_namespaced_custom_object(
-        self, group: str, version: str, namespace: str, plural: str, name: str, **kwargs
+    def get_namespaced_custom_object(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        group: str,
+        version: str,
+        namespace: str,
+        plural: str,
+        name: str,
+        **_kwargs,
     ) -> Dict[str, Any]:
         """Get a custom resource."""
         kind = plural.capitalize().rstrip("s")
@@ -432,8 +453,14 @@ class MockCustomObjectsApi:
 
         return result
 
-    def delete_namespaced_custom_object(
-        self, group: str, version: str, namespace: str, plural: str, name: str, **kwargs
+    def delete_namespaced_custom_object(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        group: str,
+        version: str,
+        namespace: str,
+        plural: str,
+        name: str,
+        **_kwargs,
     ) -> Dict[str, Any]:
         """Delete a custom resource."""
         kind = plural.capitalize().rstrip("s")
