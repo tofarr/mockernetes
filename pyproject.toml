@@ -1,7 +1,7 @@
 [project]
 name = "mockernetes"
 version = "0.1.0"
-description = "Add your description here"
+description = "A moto-like library for mocking Kubernetes API in Python tests with stateful in-memory behavior"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -9,9 +9,32 @@ dependencies = [
     "pytest>=9.0.2",
 ]
 
+[project.urls]
+Repository = "https://github.com/tofarr/mockernetes"
+
+[project.optional-dependencies]
+dev = [
+    "black>=23.3",
+    "pytest-cov>=4.0",
+    "pytest-xdist>=3.2",
+    "pylint>=3.0",
+]
+
 [project.scripts]
 mockernetes = "mockernetes:main"
 
 [build-system]
-requires = ["uv_build>=0.9.10,<0.10.0"]
-build-backend = "uv_build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["injecty"]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["tests*", "examples"]
+
+[dependency-groups]
+dev = [
+    "hatch-vcs>=0.5.0",
+    "hatchling>=1.28.0",
+]
