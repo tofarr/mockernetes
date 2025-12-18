@@ -1,12 +1,21 @@
 [project]
 name = "mockernetes"
 version = "0.1.0"
-description = "Add your description here"
+description = "A moto-like library for mocking Kubernetes API in Python tests with stateful in-memory behavior"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "kubernetes>=34.1.0",
     "pytest>=9.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=23.3",
+    "pytest>=7.2",
+    "pytest-cov>=4.0",
+    "pytest-xdist>=3.2",
+    "pylint>=3.0",
 ]
 
 [project.scripts]
