@@ -7,7 +7,8 @@ Kubernetes API client in tests, maintaining resource state and relationships.
 
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any, Type
+from typing import Any, Dict, List, Optional
+
 from kubernetes import client as k8s_client
 from kubernetes.client.rest import ApiException
 
@@ -38,12 +39,11 @@ class MockKubernetesState:
             if kind not in self.cluster_resources:
                 self.cluster_resources[kind] = {}
             return self.cluster_resources[kind]
-        else:
-            # Namespaced resource
-            self.ensure_namespace(namespace)
-            if kind not in self.namespaces[namespace]:
-                self.namespaces[namespace][kind] = {}
-            return self.namespaces[namespace][kind]
+        # Namespaced resource
+        self.ensure_namespace(namespace)
+        if kind not in self.namespaces[namespace]:
+            self.namespaces[namespace][kind] = {}
+        return self.namespaces[namespace][kind]
 
     def create_resource(
         self, namespace: Optional[str], kind: str, resource: Any
@@ -160,7 +160,12 @@ class MockKubernetesState:
 
     def _cascade_delete(self, namespace: Optional[str], owner_uid: str) -> None:
         """Delete resources that have the given UID as an owner reference."""
-        # Check all namespaces and resource types for dependent resources
+        all_stores = self._get_all_stores(namespace)
+        to_delete = self._find_dependent_resources(all_stores, owner_uid)
+        self._delete_dependent_resources(to_delete)
+
+    def _get_all_stores(self, namespace: Optional[str]) -> List[tuple]:
+        """Get all resource stores to check for dependencies."""
         all_stores = []
 
         if namespace:
@@ -177,20 +182,34 @@ class MockKubernetesState:
         for kind, store in self.cluster_resources.items():
             all_stores.append((None, kind, store))
 
-        # Find and delete dependent resources
+        return all_stores
+
+    def _find_dependent_resources(
+        self, all_stores: List[tuple], owner_uid: str
+    ) -> List[tuple]:
+        """Find resources that depend on the given owner UID."""
         to_delete = []
         for ns, kind, store in all_stores:
             for name, resource in store.items():
-                if (
-                    hasattr(resource, "metadata")
-                    and resource.metadata
-                    and resource.metadata.owner_references
-                ):
-                    for owner_ref in resource.metadata.owner_references:
-                        if owner_ref.uid == owner_uid:
-                            to_delete.append((ns, kind, name))
+                if self._has_owner_reference(resource, owner_uid):
+                    to_delete.append((ns, kind, name))
+        return to_delete
 
-        # Delete dependent resources
+    def _has_owner_reference(self, resource: Any, owner_uid: str) -> bool:
+        """Check if resource has the given UID as an owner reference."""
+        if not (
+            hasattr(resource, "metadata")
+            and resource.metadata
+            and resource.metadata.owner_references
+        ):
+            return False
+        return any(
+            owner_ref.uid == owner_uid
+            for owner_ref in resource.metadata.owner_references
+        )
+
+    def _delete_dependent_resources(self, to_delete: List[tuple]) -> None:
+        """Delete the list of dependent resources."""
         for ns, kind, name in to_delete:
             try:
                 self.delete_resource(ns, kind, name)
@@ -230,7 +249,6 @@ class MockApiClient:
 
     def close(self):
         """Mock close method."""
-        pass
 
     def __enter__(self):
         return self
