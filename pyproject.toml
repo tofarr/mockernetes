@@ -9,10 +9,12 @@ dependencies = [
     "pytest>=9.0.2",
 ]
 
+[project.urls]
+Repository = "https://github.com/tofarr/mockernetes"
+
 [project.optional-dependencies]
 dev = [
     "black>=23.3",
-    "pytest>=7.2",
     "pytest-cov>=4.0",
     "pytest-xdist>=3.2",
     "pylint>=3.0",
@@ -22,5 +24,17 @@ dev = [
 mockernetes = "mockernetes:main"
 
 [build-system]
-requires = ["uv_build>=0.9.10,<0.10.0"]
-build-backend = "uv_build"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["injecty"]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["tests*", "examples"]
+
+[dependency-groups]
+dev = [
+    "hatch-vcs>=0.5.0",
+    "hatchling>=1.28.0",
+]
