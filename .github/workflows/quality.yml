@@ -38,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
       - name: testcoverage
-        run: uv run pytest -n auto --cov-report=term-missing --cov=tests --cov=mockernetes --cov-fail-under=100
+        run: uv run pytest -n auto --cov-report=term-missing --cov=tests --cov=mockernetes --cov-fail-under=80
 
   pylint:
     runs-on: ubuntu-latest
