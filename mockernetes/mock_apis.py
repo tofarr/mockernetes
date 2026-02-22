@@ -226,7 +226,14 @@ class MockAppsV1Api:
         )
 
     def create_namespaced_deployment(
-        self, namespace: str, body: k8s_client.V1Deployment, **_kwargs
+        self,
+        namespace: str,
+        body: k8s_client.V1Deployment,
+        pretty: Optional[str] = None,
+        dry_run: Optional[str] = None,
+        field_manager: Optional[str] = None,
+        field_validation: Optional[str] = None,
+        **kwargs,
     ) -> k8s_client.V1Deployment:
         """Create a deployment."""
         # Initialize status
@@ -243,20 +250,43 @@ class MockAppsV1Api:
         return deployment
 
     def read_namespaced_deployment(
-        self, name: str, namespace: str, **_kwargs
+        self,
+        name: str,
+        namespace: str,
+        pretty: Optional[str] = None,
+        exact: Optional[bool] = None,
+        export: Optional[bool] = None,
+        **kwargs,
     ) -> k8s_client.V1Deployment:
         """Read a specific deployment."""
         return self.state.get_resource(namespace, "Deployment", name)
 
     def list_namespaced_deployment(
-        self, namespace: str, label_selector: Optional[str] = None, **_kwargs
+        self,
+        namespace: str,
+        pretty: Optional[str] = None,
+        label_selector: Optional[str] = None,
+        field_selector: Optional[str] = None,
+        include_uninitialized: Optional[bool] = None,
+        limit: Optional[int] = None,
+        continue_token: Optional[str] = None,
+        **kwargs,
     ) -> k8s_client.V1DeploymentList:
         """List deployments in a namespace."""
         deployments = self.state.list_resources(namespace, "Deployment", label_selector)
         return k8s_client.V1DeploymentList(items=deployments)
 
     def delete_namespaced_deployment(
-        self, name: str, namespace: str, **_kwargs
+        self,
+        name: str,
+        namespace: str,
+        pretty: Optional[str] = None,
+        dry_run: Optional[str] = None,
+        grace_period_seconds: Optional[int] = None,
+        orphan_dependents: Optional[bool] = None,
+        propagation_policy: Optional[str] = None,
+        body: Optional[k8s_client.V1DeleteOptions] = None,
+        **kwargs,
     ) -> k8s_client.V1Status:
         """Delete a deployment."""
         self.state.delete_resource(namespace, "Deployment", name)
