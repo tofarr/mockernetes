@@ -225,8 +225,15 @@ class MockAppsV1Api:
             api_client.state if hasattr(api_client, "state") else MockKubernetesState()
         )
 
-    def create_namespaced_deployment(
-        self, namespace: str, body: k8s_client.V1Deployment, **_kwargs
+    def create_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        namespace: str,
+        body: k8s_client.V1Deployment,
+        pretty: Optional[str] = None,  # pylint: disable=unused-argument
+        dry_run: Optional[str] = None,  # pylint: disable=unused-argument
+        field_manager: Optional[str] = None,  # pylint: disable=unused-argument
+        field_validation: Optional[str] = None,  # pylint: disable=unused-argument
+        **_kwargs,
     ) -> k8s_client.V1Deployment:
         """Create a deployment."""
         # Initialize status
@@ -242,25 +249,202 @@ class MockAppsV1Api:
 
         return deployment
 
-    def read_namespaced_deployment(
-        self, name: str, namespace: str, **_kwargs
+    def read_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        name: str,
+        namespace: str,
+        pretty: Optional[str] = None,  # pylint: disable=unused-argument
+        exact: Optional[bool] = None,  # pylint: disable=unused-argument
+        export: Optional[bool] = None,  # pylint: disable=unused-argument
+        **_kwargs,
     ) -> k8s_client.V1Deployment:
         """Read a specific deployment."""
         return self.state.get_resource(namespace, "Deployment", name)
 
-    def list_namespaced_deployment(
-        self, namespace: str, label_selector: Optional[str] = None, **_kwargs
+    def list_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        namespace: str,
+        pretty: Optional[str] = None,  # pylint: disable=unused-argument
+        label_selector: Optional[str] = None,
+        field_selector: Optional[str] = None,  # pylint: disable=unused-argument
+        include_uninitialized: Optional[bool] = None,  # pylint: disable=unused-argument
+        limit: Optional[int] = None,  # pylint: disable=unused-argument
+        continue_token: Optional[str] = None,  # pylint: disable=unused-argument
+        **_kwargs,
     ) -> k8s_client.V1DeploymentList:
         """List deployments in a namespace."""
         deployments = self.state.list_resources(namespace, "Deployment", label_selector)
         return k8s_client.V1DeploymentList(items=deployments)
 
-    def delete_namespaced_deployment(
-        self, name: str, namespace: str, **_kwargs
+    def delete_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        name: str,
+        namespace: str,
+        pretty: Optional[str] = None,  # pylint: disable=unused-argument
+        dry_run: Optional[str] = None,  # pylint: disable=unused-argument
+        grace_period_seconds: Optional[int] = None,  # pylint: disable=unused-argument
+        orphan_dependents: Optional[bool] = None,  # pylint: disable=unused-argument
+        propagation_policy: Optional[str] = None,  # pylint: disable=unused-argument
+        # pylint: disable=unused-argument
+        body: Optional[k8s_client.V1DeleteOptions] = None,
+        **_kwargs,
     ) -> k8s_client.V1Status:
         """Delete a deployment."""
         self.state.delete_resource(namespace, "Deployment", name)
         return k8s_client.V1Status(status="Success")
+
+    def patch_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+        self,
+        name: str,
+        namespace: str,
+        body: Any,
+        pretty: Optional[str] = None,  # pylint: disable=unused-argument
+        dry_run: Optional[str] = None,  # pylint: disable=unused-argument
+        field_manager: Optional[str] = None,  # pylint: disable=unused-argument
+        field_validation: Optional[str] = None,  # pylint: disable=unused-argument
+        force: Optional[bool] = None,  # pylint: disable=unused-argument
+        **_kwargs,
+    ) -> k8s_client.V1Deployment:
+        """Patch a specific deployment.
+
+        Args:
+            name: The name of the deployment to patch.
+            namespace: The namespace of the deployment to patch.
+            body: The patch to apply (can be a dict or V1Deployment).
+            pretty: If 'true', output the pretty printed form of the object.
+            dry_run: When present, indicates that modifications should not be persisted.
+            field_manager: Field manager is associated with fields being applied.
+            field_validation: Field validation mode.
+            force: Force apply the patch. Defaults to false.
+
+        Returns:
+            The patched deployment.
+        """
+        # Get the existing deployment
+        deployment = self.state.get_resource(namespace, "Deployment", name)
+
+        # Apply the patch
+        if isinstance(body, dict):
+            # Handle dict-based patches
+            patched_deployment = self._apply_patch(deployment, body)
+        elif hasattr(body, "to_dict"):
+            # Handle V1Deployment objects
+            body_dict = body.to_dict()
+            patched_deployment = self._apply_patch(deployment, body_dict)
+        else:
+            # Use as-is
+            patched_deployment = body
+
+        # Update the resource in state
+        return self.state.update_resource(
+            namespace, "Deployment", name, patched_deployment
+        )
+
+    def _apply_patch(self, deployment: Any, patch: Dict[str, Any]) -> Any:
+        """Apply a patch to a deployment.
+
+        Args:
+            deployment: The original deployment.
+            patch: The patch to apply (dict format).
+
+        Returns:
+            The patched deployment object.
+        """
+        # Apply patch directly to the deployment object
+        self._apply_dict_to_object(deployment, patch)
+        return deployment
+
+    def _apply_dict_to_object(self, obj: Any, patch: Dict[str, Any]) -> None:
+        """Recursively apply a dict patch to an object.
+
+        Args:
+            obj: The object to patch.
+            patch: The patch dict to apply.
+        """
+        for key, value in patch.items():
+            if value is None:
+                continue
+
+            # Handle dict objects (like labels, annotations) specially
+            if isinstance(obj, dict):
+                if isinstance(value, dict):
+                    # Merge dict patches
+                    obj[key] = {**obj.get(key, {}), **value}
+                else:
+                    obj[key] = value
+                continue
+
+            # Get the current value
+            current_value = getattr(obj, key, None)
+
+            if isinstance(value, dict) and current_value is not None:
+                # Recursively patch nested dicts
+                self._apply_dict_to_object(current_value, value)
+            else:
+                # Set the new value directly
+                setattr(obj, key, value)
+
+    def _deep_merge(
+        self, base: Dict[str, Any], patch: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Recursively merge patch into base dict.
+
+        Args:
+            base: The base dictionary.
+            patch: The patch dictionary to merge.
+
+        Returns:
+            The merged dictionary.
+        """
+        result = base.copy()
+
+        for key, value in patch.items():
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
+                result[key] = self._deep_merge(result[key], value)
+            else:
+                result[key] = value
+
+        return result
+
+    def _dict_to_v1_deployment(self, data: Dict[str, Any]) -> k8s_client.V1Deployment:
+        """Convert a dict to a V1Deployment object.
+
+        Args:
+            data: Dictionary containing deployment data.
+
+        Returns:
+            A V1Deployment object.
+        """
+        # Extract metadata
+        metadata = data.get("metadata", {})
+        if isinstance(metadata, dict):
+            metadata = k8s_client.V1ObjectMeta(
+                **{k: v for k, v in metadata.items() if v is not None}
+            )
+
+        # Extract spec
+        spec = data.get("spec", {})
+        if isinstance(spec, dict):
+            spec = k8s_client.V1DeploymentSpec(
+                **{k: v for k, v in spec.items() if v is not None}
+            )
+
+        # Extract status
+        status = data.get("status", {})
+        if isinstance(status, dict):
+            status = k8s_client.V1DeploymentStatus(
+                **{k: v for k, v in status.items() if v is not None}
+            )
+
+        return k8s_client.V1Deployment(
+            metadata=metadata,
+            spec=spec,
+            status=status,
+        )
 
     def _simulate_deployment_controller(
         self, deployment: k8s_client.V1Deployment, namespace: str
