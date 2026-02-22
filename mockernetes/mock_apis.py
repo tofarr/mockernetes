@@ -225,7 +225,7 @@ class MockAppsV1Api:
             api_client.state if hasattr(api_client, "state") else MockKubernetesState()
         )
 
-    def create_namespaced_deployment(
+    def create_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         namespace: str,
         body: k8s_client.V1Deployment,
@@ -249,7 +249,7 @@ class MockAppsV1Api:
 
         return deployment
 
-    def read_namespaced_deployment(
+    def read_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         name: str,
         namespace: str,
@@ -261,7 +261,7 @@ class MockAppsV1Api:
         """Read a specific deployment."""
         return self.state.get_resource(namespace, "Deployment", name)
 
-    def list_namespaced_deployment(
+    def list_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         namespace: str,
         pretty: Optional[str] = None,
@@ -276,7 +276,7 @@ class MockAppsV1Api:
         deployments = self.state.list_resources(namespace, "Deployment", label_selector)
         return k8s_client.V1DeploymentList(items=deployments)
 
-    def delete_namespaced_deployment(
+    def delete_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         name: str,
         namespace: str,
@@ -292,7 +292,7 @@ class MockAppsV1Api:
         self.state.delete_resource(namespace, "Deployment", name)
         return k8s_client.V1Status(status="Success")
 
-    def patch_namespaced_deployment(
+    def patch_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         name: str,
         namespace: str,
@@ -335,7 +335,9 @@ class MockAppsV1Api:
             patched_deployment = body
 
         # Update the resource in state
-        return self.state.update_resource(namespace, "Deployment", name, patched_deployment)
+        return self.state.update_resource(
+            namespace, "Deployment", name, patched_deployment
+        )
 
     def _apply_patch(self, deployment: Any, patch: Dict[str, Any]) -> Any:
         """Apply a patch to a deployment.
@@ -381,7 +383,9 @@ class MockAppsV1Api:
                 # Set the new value directly
                 setattr(obj, key, value)
 
-    def _deep_merge(self, base: Dict[str, Any], patch: Dict[str, Any]) -> Dict[str, Any]:
+    def _deep_merge(
+        self, base: Dict[str, Any], patch: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Recursively merge patch into base dict.
 
         Args:
@@ -394,7 +398,11 @@ class MockAppsV1Api:
         result = base.copy()
 
         for key, value in patch.items():
-            if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            if (
+                key in result
+                and isinstance(result[key], dict)
+                and isinstance(value, dict)
+            ):
                 result[key] = self._deep_merge(result[key], value)
             else:
                 result[key] = value
@@ -413,7 +421,9 @@ class MockAppsV1Api:
         # Extract metadata
         metadata = data.get("metadata", {})
         if isinstance(metadata, dict):
-            metadata = k8s_client.V1ObjectMeta(**{k: v for k, v in metadata.items() if v is not None})
+            metadata = k8s_client.V1ObjectMeta(
+                **{k: v for k, v in metadata.items() if v is not None}
+            )
 
         # Extract spec
         spec = data.get("spec", {})
