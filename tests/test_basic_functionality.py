@@ -302,7 +302,9 @@ def test_patch_namespaced_deployment_replicas():
 
         # Create a deployment
         deployment = k8s_client.V1Deployment(
-            metadata=k8s_client.V1ObjectMeta(name="test-deployment", namespace="default"),
+            metadata=k8s_client.V1ObjectMeta(
+                name="test-deployment", namespace="default"
+            ),
             spec=k8s_client.V1DeploymentSpec(
                 replicas=3,
                 selector=k8s_client.V1LabelSelector(match_labels={"app": "test"}),
@@ -345,9 +347,7 @@ def test_patch_namespaced_deployment_labels():
         # Create a deployment
         deployment = k8s_client.V1Deployment(
             metadata=k8s_client.V1ObjectMeta(
-                name="test-deployment",
-                namespace="default",
-                labels={"app": "test"}
+                name="test-deployment", namespace="default", labels={"app": "test"}
             ),
             spec=k8s_client.V1DeploymentSpec(
                 replicas=1,
@@ -386,7 +386,9 @@ def test_patch_namespaced_deployment_annotations():
 
         # Create a deployment
         deployment = k8s_client.V1Deployment(
-            metadata=k8s_client.V1ObjectMeta(name="test-deployment", namespace="default"),
+            metadata=k8s_client.V1ObjectMeta(
+                name="test-deployment", namespace="default"
+            ),
             spec=k8s_client.V1DeploymentSpec(
                 replicas=1,
                 selector=k8s_client.V1LabelSelector(match_labels={"app": "test"}),
@@ -486,7 +488,9 @@ def test_patch_namespaced_deployment_v1deployment_object():
 
         # Create a deployment
         deployment = k8s_client.V1Deployment(
-            metadata=k8s_client.V1ObjectMeta(name="test-deployment", namespace="default"),
+            metadata=k8s_client.V1ObjectMeta(
+                name="test-deployment", namespace="default"
+            ),
             spec=k8s_client.V1DeploymentSpec(
                 replicas=3,
                 selector=k8s_client.V1LabelSelector(match_labels={"app": "test"}),

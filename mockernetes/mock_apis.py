@@ -229,11 +229,11 @@ class MockAppsV1Api:
         self,
         namespace: str,
         body: k8s_client.V1Deployment,
-        pretty: Optional[str] = None,
-        dry_run: Optional[str] = None,
-        field_manager: Optional[str] = None,
-        field_validation: Optional[str] = None,
-        **kwargs,
+        pretty: Optional[str] = None,  # pylint: disable=unused-argument
+        dry_run: Optional[str] = None,  # pylint: disable=unused-argument
+        field_manager: Optional[str] = None,  # pylint: disable=unused-argument
+        field_validation: Optional[str] = None,  # pylint: disable=unused-argument
+        **_kwargs,
     ) -> k8s_client.V1Deployment:
         """Create a deployment."""
         # Initialize status
@@ -253,10 +253,10 @@ class MockAppsV1Api:
         self,
         name: str,
         namespace: str,
-        pretty: Optional[str] = None,
-        exact: Optional[bool] = None,
-        export: Optional[bool] = None,
-        **kwargs,
+        pretty: Optional[str] = None,  # pylint: disable=unused-argument
+        exact: Optional[bool] = None,  # pylint: disable=unused-argument
+        export: Optional[bool] = None,  # pylint: disable=unused-argument
+        **_kwargs,
     ) -> k8s_client.V1Deployment:
         """Read a specific deployment."""
         return self.state.get_resource(namespace, "Deployment", name)
@@ -264,13 +264,13 @@ class MockAppsV1Api:
     def list_namespaced_deployment(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         namespace: str,
-        pretty: Optional[str] = None,
+        pretty: Optional[str] = None,  # pylint: disable=unused-argument
         label_selector: Optional[str] = None,
-        field_selector: Optional[str] = None,
-        include_uninitialized: Optional[bool] = None,
-        limit: Optional[int] = None,
-        continue_token: Optional[str] = None,
-        **kwargs,
+        field_selector: Optional[str] = None,  # pylint: disable=unused-argument
+        include_uninitialized: Optional[bool] = None,  # pylint: disable=unused-argument
+        limit: Optional[int] = None,  # pylint: disable=unused-argument
+        continue_token: Optional[str] = None,  # pylint: disable=unused-argument
+        **_kwargs,
     ) -> k8s_client.V1DeploymentList:
         """List deployments in a namespace."""
         deployments = self.state.list_resources(namespace, "Deployment", label_selector)
@@ -280,13 +280,14 @@ class MockAppsV1Api:
         self,
         name: str,
         namespace: str,
-        pretty: Optional[str] = None,
-        dry_run: Optional[str] = None,
-        grace_period_seconds: Optional[int] = None,
-        orphan_dependents: Optional[bool] = None,
-        propagation_policy: Optional[str] = None,
+        pretty: Optional[str] = None,  # pylint: disable=unused-argument
+        dry_run: Optional[str] = None,  # pylint: disable=unused-argument
+        grace_period_seconds: Optional[int] = None,  # pylint: disable=unused-argument
+        orphan_dependents: Optional[bool] = None,  # pylint: disable=unused-argument
+        propagation_policy: Optional[str] = None,  # pylint: disable=unused-argument
+        # pylint: disable=unused-argument
         body: Optional[k8s_client.V1DeleteOptions] = None,
-        **kwargs,
+        **_kwargs,
     ) -> k8s_client.V1Status:
         """Delete a deployment."""
         self.state.delete_resource(namespace, "Deployment", name)
@@ -297,12 +298,12 @@ class MockAppsV1Api:
         name: str,
         namespace: str,
         body: Any,
-        pretty: Optional[str] = None,
-        dry_run: Optional[str] = None,
-        field_manager: Optional[str] = None,
-        field_validation: Optional[str] = None,
-        force: Optional[bool] = None,
-        **kwargs,
+        pretty: Optional[str] = None,  # pylint: disable=unused-argument
+        dry_run: Optional[str] = None,  # pylint: disable=unused-argument
+        field_manager: Optional[str] = None,  # pylint: disable=unused-argument
+        field_validation: Optional[str] = None,  # pylint: disable=unused-argument
+        force: Optional[bool] = None,  # pylint: disable=unused-argument
+        **_kwargs,
     ) -> k8s_client.V1Deployment:
         """Patch a specific deployment.
 
